@@ -1,5 +1,5 @@
 import logging
-import random  # ← эта строка была пропущена
+import random
 from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 # Список администраторов (замените на реальные ID)
 ADMIN_IDS = [7089719051, 1621555803]  # ← замените на свои ID!
 
-# Хранилище анонимных сообщений
+# Хранилище анонимных сообщений (теперь хранит ник и текст)
 anonymous_messages = []
 
 # Мотивационные фразы по дням недели (0 = понедельник, 6 = воскресенье)
@@ -177,15 +177,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
     elif query.data == "motivation":
         # Берём мотивацию по дню недели
-        day_index = datetime.now().weekday()  # 0-6
+        day_index = datetime.now().weekday()  # 0–6
         motivation = DAILY_MOTIVATION[day_index]
         await query.edit_message_text(
             text=f"*🌟 Мотивация дня:*\n\n{motivation}",
             parse_mode="Markdown",
-            reply_markup=get_back_button()
-        )
-        await query.edit_message_text(
-            text=f"⚠️ Мотивация дня:\n\n{motivation}",
             reply_markup=get_back_button()
         )
     elif query.data == "show_messages":
@@ -193,9 +189,16 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await query.answer("Доступ запрещён!", show_alert=True)
             return
         if anonymous_messages:
-            msg = "\n".join([f"• {m}" for m in anonymous_messages])
+            # Формируем список сообщений с никами (если есть)
+            msg_lines = []
+            for msg in anonymous_messages:
+                if msg['username']:
+                    msg_lines.append(f"• {msg['text']} (от @{msg['username']})")
+                else:
+                    msg_lines.append(f"• {msg['text']} (анонимно)")
+            msg = "\n".join(msg_lines)
         else:
-            msg = "📜Пока нет анонимных сообщений."
+            msg = "📜 Пока нет анонимных сообщений."
         await query.edit_message_text(
             text=f"[❗] Анонимные сообщения:\n\n{msg}",
             reply_markup=get_back_button()
@@ -208,16 +211,16 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_markup=get_return_menu_button()
             )
             return
-    
+
         term, definition = random.choice(list(TERMS.items()))
         message_text = f"*Термин:* {term}\n\n{definition}"
-    
+
         await query.edit_message_text(
             text=message_text,
             parse_mode="Markdown",
             reply_markup=get_inline_keyboard_with_return()  # ← две кнопки
         )
-    
+
     elif query.data == "terms_next":
         if not TERMS:
             await query.edit_message_text(
@@ -226,27 +229,27 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_markup=get_return_menu_button()
             )
             return
-    
+
         all_terms = list(TERMS.items())
         current_term = context.user_data.get("last_term")
-    
+
         available_terms = [
             item for item in all_terms
             if item[0] != current_term
         ]
-    
+
         if available_terms:
             term, definition = random.choice(available_terms)
         else:
             term, definition = random.choice(all_terms)
-    
+
         context.user_data["last_term"] = term
-    
+
         # Комбинирование: текст + timestamp
         import time
         timestamp = int(time.time() * 1000)
         message_text = f"*Термин:* {term}\n\n{definition}\n\n🕒"
-    
+
         await query.edit_message_text(
             text=message_text,
             parse_mode="Markdown",
@@ -260,12 +263,19 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if context.user_data.get("awaiting_anon"):
         text = update.message.text
-        anonymous_messages.append(text)
+        # Получаем ник пользователя (если указан)
+        username = update.effective_user.username  # Может быть None
+        
+        # Сохраняем сообщение вместе с ником
+        anonymous_messages.append({
+            'text': text,
+            'username': username
+        })
         context.user_data["awaiting_anon"] = False
-        logger.info(f"[Аноним] от {user_id}: {text}")
+        logger.info(f"☀️ ~ {user_id}): {text}")
 
         await update.message.reply_text(
-            "✔️ ~ Спасибо! Ваше сообщение получено анонимно.",
+            "✔️ Спасибо! Ваше сообщение получено анонимно.",
             reply_markup=get_main_menu(user_id)
         )
     else:
@@ -273,6 +283,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "👉 Используйте кнопки меню.",
             reply_markup=get_main_menu(user_id)
         )
+
 
 def main():
     TOKEN = "7992646305:AAGzYvli1lqJl2VFbwLk6Bbu-jlQEEJF108"  # ← замените на токен вашего бота
