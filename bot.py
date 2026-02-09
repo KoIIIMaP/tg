@@ -193,9 +193,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             msg_lines = []
             for msg in anonymous_messages:
                 if msg['username']:
-                    msg_lines.append(f"• {msg['text']} (от @{msg['username']})")
+                    msg_lines.append(f"☀ (от @{msg['username']}) ~ {msg['text']} ")
                 else:
-                    msg_lines.append(f"• {msg['text']} (анонимно)")
+                    msg_lines.append(f"☀ (анонимно) ~  {msg['text']} ")
             msg = "\n".join(msg_lines)
         else:
             msg = "📜 Пока нет анонимных сообщений."
