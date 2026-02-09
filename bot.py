@@ -286,7 +286,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 def main():
-    TOKEN = "7992646305:AAGzYvli1lqJl2VFbwLk6Bbu-jlQEEJF108"  # ← замените на токен вашего бота
+    TOKEN = "7992646305:AAGoPe5mBK-ud6QACKAdM3xT3EgFfvDOIC8"  # ← замените на токен вашего бота
 
     application = Application.builder().token(TOKEN).build()
 
