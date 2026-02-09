@@ -200,7 +200,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             msg = "📜 Пока нет анонимных сообщений."
         await query.edit_message_text(
-            text=f"[❗] Анонимные сообщения:\n\n{msg}",
+            text=f"☀ Анонимные сообщения:\n\n{msg}",
             reply_markup=get_back_button()
         )
     elif query.data == "terms":
