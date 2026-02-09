@@ -272,7 +272,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'username': username
         })
         context.user_data["awaiting_anon"] = False
-        logger.info(f"☀️ ~ {user_id}): {text}")
+        logger.info(f"☀ ~ {user_id}): {text}")
 
         await update.message.reply_text(
             "✔️ Спасибо! Ваше сообщение получено анонимно.",
